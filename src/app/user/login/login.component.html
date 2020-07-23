@@ -1,0 +1,89 @@
+<!-- .container starts -->
+<div class="container">
+    <!-- .row starts -->
+    <div class="row mt-5">
+        <div class="col-lg-6 col-md-8 offset-md-2 offset-lg-3">
+            <!-- form starts -->
+            <form class="border-primary p-4" style="border: 7px solid white;" #loginForm="ngForm" (ngSubmit)="login()">
+                <!-- .form-row starts -->
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <span style="font-size: 1.5rem;">Login</span>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row mt-3">
+                    <div class="col-md-12 mb-3">
+                        <label for="email" class="font-weight-bold">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Email" [class.is-invalid]="!validateEmail(email) && !_email.pristine" [class.is-valid]="_email.valid" [(ngModel)]="email" #_email="ngModel" required>
+                        <div class="invalid-tooltip">
+                            Enter a valid email!
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row" *ngIf="!isForgotPassword">
+                    <div class="col-md-12 mb-3">
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <label for="password" class="font-weight-bold">Password</label>
+                            </div>
+                            <div class="col-md-6 form-inline" style="justify-content: flex-end;">
+                                <button class="btn btn-link" (click)="forgotPassword()" type="button">Forgot Password</button>
+                            </div>
+                        </div>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" [class.is-invalid]="!_password.valid && !_password.pristine" [class.is-valid]="_password.valid" [(ngModel)]="password" #_password="ngModel" required>
+                        <div class="invalid-tooltip">
+                            Enter your password?
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row" *ngIf="isForgotPassword">
+                    <div class="col-md-12 mb-3">
+                        <label for="otp" class="font-weight-bold">OTP</label>
+                        <input type="number" class="form-control" id="otp" name="OTP" placeholder="OTP" [class.is-invalid]="!_otp.valid && !_otp.pristine" [class.is-valid]="_password.valid" [(ngModel)]="OTP" #_otp="ngModel" required>
+                        <div class="invalid-tooltip">
+                            Enter OTP send to you registered email?
+                        </div>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <label for="password" class="font-weight-bold">New Password</label>
+                            </div>
+                            <div class="col-md-6 form-inline" style="justify-content: flex-end;">
+                                <button class="btn btn-link" (click)="forgotPassword()" type="button">Goto Login</button>
+                            </div>
+                        </div>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" [class.is-invalid]="!_password.valid && !_password.pristine" [class.is-valid]="_password.valid" [(ngModel)]="password" #_password="ngModel" required>
+                        <div class="invalid-tooltip">
+                            Enter your new password?
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <button *ngIf="!isForgotPassword" class="btn btn-danger form-control mt-5" type="submit" [disabled]="!loginForm.form.valid">Login</button>
+                <button *ngIf="isForgotPassword" class="btn btn-info form-control mt-5" type="submit" [disabled]="!loginForm.form.valid">Change Password</button>
+                <div class="form-row mt-5">
+                    <div class="col-md-4">
+                        <hr>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        What new?
+                    </div>
+                    <div class="col-md-4">
+                        <hr>
+                    </div>
+                </div>
+                <a class="btn btn-primary form-control mt-5" [routerLink]="['/signup']">Sign Up</a>
+            </form>
+            <!-- form ends -->
+        </div>
+    </div>
+    <!-- .row ends -->
+</div>
+<!-- .container ends -->

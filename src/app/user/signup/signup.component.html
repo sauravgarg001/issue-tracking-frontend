@@ -1,0 +1,85 @@
+<!-- .container starts -->
+<div class="container">
+    <!-- .row starts -->
+    <div class="row mt-3">
+        <div class="col-lg-6 col-md-8 offset-md-2 offset-lg-3">
+            <form class="border-primary p-4" style="border: 7px solid white;" #signupForm="ngForm" (ngSubmit)="signup()">
+                <!-- .form-row starts -->
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <span style="font-size: 1.5rem;">Sign Up</span>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row mt-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="firstName" class="font-weight-bold">First name</label>
+                        <input type="text" class="form-control" [class.is-invalid]="!_firstName.valid && !_firstName.pristine" [class.is-valid]="_firstName.valid" id="firstName" name="firstName" [(ngModel)]="firstName" placeholder="First name" #_firstName="ngModel" required>
+                        <div class="invalid-feedback">
+                            Enter your first name?
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lastName" class="font-weight-bold">Last name</label>
+                        <input type="text" class="form-control" [class.is-invalid]="!_lastName.valid && !_lastName.pristine" [class.is-valid]="_lastName.valid" id="lastName" name="lastName" [(ngModel)]="lastName" placeholder="Last name" #_lastName="ngModel" required>
+                        <div class="invalid-feedback">
+                            Enter your last name?
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row">
+                    <div class="col-md-12 mb-3">
+                        <label for="email" class="font-weight-bold">Email</label>
+                        <input type="email" class="form-control" [class.is-invalid]="!validateEmail(email) && !_email.pristine" [class.is-valid]="validateEmail(email)" id="email" name="email" [(ngModel)]="email" placeholder="Email" #_email="ngModel" required>
+                        <div class="invalid-feedback" [hidden]="validateEmail(email) && _email.touched">
+                            Enter a valid email!
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class=" form-row">
+                    <div class="col-md-3 mb-3">
+                        <label for="countryCode" class="font-weight-bold">Country Code</label>
+                        <select class="form-control" id="countryCode" [class.is-invalid]="countryCode=='' && _countryCode.touched" [class.is-valid]="countryCode!=''" name="countryCode" [(ngModel)]="countryCode" #_countryCode="ngModel">
+                            <option value="" >Select</option>
+                            <option *ngFor="let code of codes" [value]="code" >{{code}}</option>
+                          </select>
+                        <div class="invalid-feedback">
+                            Select a country code?
+                        </div>
+                    </div>
+                    <div class="col-md-9 mb-3">
+                        <label for="mobileNumber" class="font-weight-bold">Mobile number</label>
+                        <input type="number" class="form-control" [class.is-invalid]="!validateMobile(mobileNumber) && !_mobileNumber.pristine" [class.is-valid]="validateMobile(mobileNumber)" id="mobileNumber" name="mobileNumber" [(ngModel)]="mobileNumber" placeholder="Mobile number"
+                            #_mobileNumber="ngModel" required>
+                        <div class="invalid-feedback" [hidden]="validateMobile(mobileNumber) && _mobileNumber.touched">
+                            Enter a valid mobile number!
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <!-- .form-row starts -->
+                <div class="form-row">
+                    <div class="col-md-12 mb-3">
+                        <label for="password" class="font-weight-bold">Password</label>
+                        <input type="password" class="form-control" [class.is-invalid]="!validatePassword(password) && !_password.pristine" [class.is-valid]="validatePassword(password)" id="password" name="password" [(ngModel)]="password" placeholder="Password" #_password="ngModel"
+                            required>
+                        <div class="invalid-feedback" [hidden]="validatePassword(password) && _password.touched">
+                            Enter password with atleast: <br> 1 capital letter <br> 1 special character<br> 1 digit <br> 1 small letter <br> Total of 8 characters.
+                        </div>
+                    </div>
+                </div>
+                <!-- .form-row ends -->
+                <button class="btn btn-primary form-control mt-3" type="submit" [disabled]="!signupForm.form.valid || !validateEmail(email) || !validateMobile(mobileNumber) || !validatePassword(password)">Sign Up</button>
+                <a class="btn btn-danger form-control mt-3 mb-5" [routerLink]="['/login']">Back to Login Page</a>
+            </form>
+
+        </div>
+    </div>
+    <!-- .row ends -->
+</div>
+<!-- .container ends -->
