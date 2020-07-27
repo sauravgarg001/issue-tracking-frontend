@@ -8,11 +8,8 @@ import { Observable } from 'rxjs';
 export class AppService {
 
   private url = 'http://localhost:3000/api/v1/users';
-  private authToken;
 
-  constructor(private http: HttpClient) {
-    this.authToken = this.getUserInfoFromLocalStorage().authToken;
-  }
+  constructor(private http: HttpClient) { }
 
   private handleError(err: HttpErrorResponse) {
     return Observable.throw(err.message);
@@ -56,20 +53,20 @@ export class AppService {
 
   public logout(): Observable<any> {
     const params = new HttpParams()
-      .set('authToken', this.authToken)
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken)
     return this.http.post(`${this.url}/logout`, params);
   }
 
   public getUser(): Observable<any> {
     const params = new HttpParams()
-      .set('authToken', this.authToken)
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken)
 
     return this.http.get(`${this.url}/`, { params: params });
   }
 
   public getUsers(): Observable<any> {
     const params = new HttpParams()
-      .set('authToken', this.authToken)
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken)
 
     return this.http.get(`${this.url}/all`, { params: params });
   }
@@ -80,6 +77,10 @@ export class AppService {
 
   public setUserInfoInLocalStorage(data) {
     return localStorage.setItem('userInfo', JSON.stringify(data));
+  }
+
+  public removeUserInfoInLocalStorage() {
+    localStorage.removeItem('userInfo');
   }
 
   public getCountryCode(): Observable<any> {

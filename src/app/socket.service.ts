@@ -3,7 +3,7 @@ import * as io from 'socket.io-client';
 import { Observable } from 'rxjs';
 import { HttpErrorResponse, HttpClient } from '@angular/common/http';
 import { tap } from "rxjs/operators"
-import { AppService } from 'src/app/app.service';
+import { AppService } from './app.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,14 +12,10 @@ export class SocketService {
 
   private baseUrl = 'http://localhost:3000';
   private socket;
-  private userId;
 
-  constructor(public http: HttpClient) {
+  constructor(public http: HttpClient, public appService: AppService) {
     //handshake
     this.socket = io(this.baseUrl);
-
-    let appService: AppService;
-    this.userId = appService.getUserInfoFromLocalStorage().userId;
   }
 
   public verifyUser() {
@@ -33,16 +29,14 @@ export class SocketService {
   }
 
   public setUser() {
-    let appService: AppService;
-    let authToken = appService.getUserInfoFromLocalStorage().authToken;
     let data = {
-      authToken: authToken
+      authToken: this.appService.getUserInfoFromLocalStorage().authToken
     }
     this.socket.emit('set-user', data);
   }
 
   public setUpdates(data) {
-    data.userId = this.userId;
+    data.userId = this.appService.getUserInfoFromLocalStorage().userId;
     let eventName = data.eventName;
     delete data.eventName;
     this.socket.emit(eventName, data);
@@ -50,7 +44,7 @@ export class SocketService {
 
   public authError() {
     return Observable.create((observer) => {
-      this.socket.on('auth-error@' + this.userId, (data) => {
+      this.socket.on('auth-error', (data) => {
         observer.next(data);
       });
     });
@@ -68,7 +62,7 @@ export class SocketService {
 
   public getUpdates() {
     return Observable.create((observer) => {
-      this.socket.on('updates@' + this.userId, (data) => {
+      this.socket.on('updates@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
         observer.next(data);
       });
     });

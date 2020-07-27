@@ -9,6 +9,8 @@ import { UserModule } from './user/user.module';
 import { LoginComponent } from './user/login/login.component';
 import { AppService } from './app.service';
 import { ToastrModule } from "ngx-toastr";
+import { ListModule } from './list/list.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @NgModule({
   declarations: [
@@ -17,6 +19,8 @@ import { ToastrModule } from "ngx-toastr";
   imports: [
     BrowserModule,
     UserModule,
+    ListModule,
+    DashboardModule,
     RouterModule.forRoot([
       { path: 'login', component: LoginComponent, pathMatch: 'full' },
       { path: '', redirectTo: 'login', pathMatch: 'full' },

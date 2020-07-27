@@ -19,7 +19,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     let userInfo = this.appService.getUserInfoFromLocalStorage();
-    if (userInfo.authToken && userInfo.userId)
+    if (userInfo && userInfo.authToken && userInfo.userId)
       this.router.navigate(['/dashboard']);
   }
 

@@ -1,0 +1,87 @@
+<button type="button" (click)="logout('')" class="btn btn-danger">Logout</button>
+<a [routerLink]="['/issue/add']" class="btn btn-info">Add Issue</a>
+
+<nav>
+    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true" (click)="toggleIssueType()">Assigned</a>
+        <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false" (click)="toggleIssueType()">Reported</a>
+    </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <table class="table table-striped table-hover" *ngIf="issuesType == 'Assigned'">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col" (click)="sortBy('title')">Title
+                        <fa-icon *ngIf="sort=='title'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-title'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('status')">Status
+                        <fa-icon *ngIf="sort=='status'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-status'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('reporter')">Reporter
+                        <fa-icon *ngIf="sort=='reporter'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-reporter'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('createdOn')">Created
+                        <fa-icon *ngIf="sort=='createdOn'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-createdOn'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('modifiedOn')">Last Modified
+                        <fa-icon *ngIf="sort=='modifiedOn'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-modifiedOn'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                </tr>
+            </thead>
+            <tbody *ngIf="issues">
+                <tr *ngFor="let issue of issues" (click)="openIssue(issue.issueId)">
+                    <td>{{issue.title}}</td>
+                    <td [ngClass]="{'text-primary': issue.status=='In-Progress', 'text-info': issue.status=='In-Test', 'text-success': issue.status=='Done', 'text-danger': issue.status=='Backlog'}">{{issue.status}}</td>
+                    <td [title]="issue.reporter.email">{{issue.reporter.firstName}} {{issue.reporter.lastName}}</td>
+                    <td>{{issue.createdOn | date:'h:mm a, d MMM y'}}</td>
+                    <td>{{issue.modifiedOn | date:'h:mm a, d MMM y'}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+        <table class="table table-striped table-hover" *ngIf="issuesType == 'Reported'">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col" (click)="sortBy('title')">Title
+                        <fa-icon *ngIf="sort=='title'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-title'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('status')">Status
+                        <fa-icon *ngIf="sort=='status'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-status'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('assignees')">Assignees
+                        <fa-icon *ngIf="sort=='assignees'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-assignees'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('createdOn')">Created
+                        <fa-icon *ngIf="sort=='createdOn'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-createdOn'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                    <th scope="col" (click)="sortBy('modifiedOn')">Last Modified
+                        <fa-icon *ngIf="sort=='modifiedOn'" [icon]="faArrowUp"></fa-icon>
+                        <fa-icon *ngIf="sort=='-modifiedOn'" [icon]="faArrowDown"></fa-icon>
+                    </th>
+                </tr>
+            </thead>
+            <tbody *ngIf="issues">
+                <tr *ngFor="let issue of issues" (click)="openIssue(issue.issueId)">
+                    <td>{{issue.title}}</td>
+                    <td [ngClass]="{'text-primary': issue.status=='In-Progress', 'text-info': issue.status=='In-Test', 'text-success': issue.status=='Done', 'text-danger': issue.status=='Backlog'}">{{issue.status}}</td>
+                    <td>
+                        <span *ngFor="let assignee of issue.assignees; let i = index" [attr.data-index]="i" [title]="assignee.to.email">{{assignee.to.firstName}} {{assignee.to.lastName}}<span *ngIf="i!=issue.assignees.length-1">, </span></span>
+                    </td>
+                    <td>{{issue.createdOn | date:'h:mm a, d MMM y'}}</td>
+                    <td>{{issue.modifiedOn | date:'h:mm a, d MMM y'}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

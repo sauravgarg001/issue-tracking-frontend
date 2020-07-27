@@ -29,3 +29,4 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 ## References
 
 Font Awesome 5: https://github.com/FortAwesome/angular-fontawesome
+Check if two arrays are equal or not: https://www.geeksforgeeks.org/check-if-two-arrays-are-equal-or-not/
