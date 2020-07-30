@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ListComponent } from './list/list.component';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 
 
@@ -13,7 +14,8 @@ import { FormsModule } from '@angular/forms';
     RouterModule.forChild([
       { path: 'issues', component: ListComponent }
     ]),
-    FormsModule
+    FormsModule,
+    FontAwesomeModule
   ]
 })
 export class ListModule { }

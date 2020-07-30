@@ -30,3 +30,4 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 Font Awesome 5: https://github.com/FortAwesome/angular-fontawesome
 Check if two arrays are equal or not: https://www.geeksforgeeks.org/check-if-two-arrays-are-equal-or-not/
+call a function on every route change: https://stackoverflow.com/questions/42453375/how-to-call-a-function-on-every-route-change-in-angular2

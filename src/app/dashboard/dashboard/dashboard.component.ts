@@ -20,13 +20,22 @@ export class DashboardComponent implements OnInit {
   public issuesType = 'Assigned';
   public issues;
   public user;
+  public filterType = 'title';
   public sort = 'modifiedOn';
+  public search = '';
+  public page = 1;
+  public totalIssues;
+  public totalPages;
 
   constructor(public appService: AppService,
     public socketService: SocketService,
     public router: Router,
     private toastr: ToastrService,
     public issueService: IssueService) { }
+
+  public counter(i): Array<number> {
+    return Array.from({ length: i }, (x, i) => i + 1);
+  }
 
   ngOnInit(): void {
     let userInfo = this.appService.getUserInfoFromLocalStorage();
@@ -77,8 +86,31 @@ export class DashboardComponent implements OnInit {
       });
     }
 
+    let getIssuesCount = () => {
+      return new Promise((resolve, reject) => {
+
+        this.issueService.getIssuesAssignedCount({}).subscribe(
+          (apiResponse) => {
+            console.log(apiResponse);
+            if (apiResponse.status === 200) {
+              this.totalIssues = apiResponse.data;
+              this.totalPages = Math.ceil(this.totalIssues / 10);
+              resolve();
+            }
+            else {
+              reject(apiResponse.message);
+            }
+          },
+          (err) => {
+            reject(err.error.message);
+          }
+        );
+      });
+    }
+
     getUser()
       .then(getIssues)
+      .then(getIssuesCount)
       .then(() => {
         console.info("Initialization Done");
       })
@@ -86,6 +118,42 @@ export class DashboardComponent implements OnInit {
         this.toastr.error(errorMessage)
       });
 
+  }
+
+  private getIssuesCount(): void {
+    if (this.issuesType == 'Assigned') {
+      this.issueService.getIssuesAssignedCount({ searchType: this.filterType, search: this.search }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.totalIssues = apiResponse.data;
+            this.totalPages = Math.ceil(this.totalIssues / 10);
+          }
+          else {
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.toastr.error(err.error.message);
+        }
+      );
+    } else {
+      this.issueService.getIssuesReportedCount({ searchType: this.filterType, search: this.search }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.totalIssues = apiResponse.data;
+            this.totalPages = Math.ceil(this.totalIssues / 10);
+          }
+          else {
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.toastr.error(err.error.message);
+        }
+      );
+    }
   }
 
   public verifyUserConfirmation(): any {
@@ -130,14 +198,17 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  public toggleIssueType(): void {
-    if (this.issuesType == 'Assigned') {
-      this.issueService.getIssuesReported({}).subscribe(
+  public toggleIssueType(issueType): void {
+    if (issueType == 'Reported') {
+      this.issueService.getIssuesReported({ searchType: this.filterType, search: this.search }).subscribe(
         (apiResponse) => {
           console.log(apiResponse);
           if (apiResponse.status === 200) {
             this.issues = apiResponse.data;
             this.issuesType = 'Reported';
+            this.sort = 'modifiedOn';
+            this.page = 1;
+            this.getIssuesCount();
           }
           else {
             this.issues = null
@@ -147,15 +218,20 @@ export class DashboardComponent implements OnInit {
         (err) => {
           this.issues = null
           this.toastr.error(err.error.message);
+          this.issuesType = 'Reported';
+          this.getIssuesCount();
         }
       );
     } else {
-      this.issueService.getIssuesAssigned({}).subscribe(
+      this.issueService.getIssuesAssigned({ searchType: this.filterType, search: this.search }).subscribe(
         (apiResponse) => {
           console.log(apiResponse);
           if (apiResponse.status === 200) {
             this.issues = apiResponse.data;
             this.issuesType = 'Assigned';
+            this.sort = 'modifiedOn';
+            this.page = 1;
+            this.getIssuesCount();
           }
           else {
             this.issues = null
@@ -165,6 +241,8 @@ export class DashboardComponent implements OnInit {
         (err) => {
           this.issues = null
           this.toastr.error(err.error.message);
+          this.issuesType = 'Assigned';
+          this.getIssuesCount();
         }
       );
     }
@@ -179,11 +257,12 @@ export class DashboardComponent implements OnInit {
       this.sort = sortBy;
     }
     if (this.issuesType == 'Assigned') {
-      this.issueService.getIssuesAssigned({ sort: this.sort }).subscribe(
+      this.issueService.getIssuesAssigned({ sort: this.sort, searchType: this.filterType, search: this.search }).subscribe(
         (apiResponse) => {
           console.log(apiResponse);
           if (apiResponse.status === 200) {
             this.issues = apiResponse.data;
+            this.page = 1;
           }
           else {
             this.issues = null
@@ -196,11 +275,94 @@ export class DashboardComponent implements OnInit {
         }
       );
     } else {
-      this.issueService.getIssuesReported({ sort: this.sort }).subscribe(
+      this.issueService.getIssuesReported({ sort: this.sort, searchType: this.filterType, search: this.search }).subscribe(
         (apiResponse) => {
           console.log(apiResponse);
           if (apiResponse.status === 200) {
             this.issues = apiResponse.data;
+            this.page = 1;
+          }
+          else {
+            this.issues = null
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.issues = null
+          this.toastr.error(err.error.message);
+        }
+      );
+    }
+  }
+
+  public filter(search): void {
+    this.search = search;
+    this.getIssuesCount();
+    if (this.issuesType == 'Assigned') {
+      this.issueService.getIssuesAssigned({ sort: this.sort, searchType: this.filterType, search: this.search }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.issues = apiResponse.data;
+            this.page = 1;
+          }
+          else {
+            this.issues = null
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.issues = null
+          this.toastr.error(err.error.message);
+        }
+      );
+    } else {
+      this.issueService.getIssuesReported({ sort: this.sort, searchType: this.filterType, search: this.search }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.issues = apiResponse.data;
+            this.page = 1;
+          }
+          else {
+            this.issues = null
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.issues = null
+          this.toastr.error(err.error.message);
+        }
+      );
+    }
+  }
+
+  public gotoPage(pageNumber: number): void {
+    if (this.issuesType == 'Assigned') {
+      this.issueService.getIssuesAssigned({ sort: this.sort, searchType: this.filterType, search: this.search, skip: (pageNumber - 1) * 10 }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.issues = apiResponse.data;
+            this.page = pageNumber;
+          }
+          else {
+            this.issues = null
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.issues = null
+          this.toastr.error(err.error.message);
+        }
+      );
+    } else {
+      this.issueService.getIssuesReported({ sort: this.sort, searchType: this.filterType, search: this.search, skip: (pageNumber - 1) * 10 }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.issues = apiResponse.data;
+            this.page = pageNumber;
           }
           else {
             this.issues = null

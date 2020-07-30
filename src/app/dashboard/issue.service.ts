@@ -39,8 +39,18 @@ export class IssueService {
       .set('authToken', this.appService.getUserInfoFromLocalStorage().authToken)
       .set('limit', data.limit ? data.limit : '')
       .set('sort', data.sort ? data.sort : '')
-      .set('skip', data.skip ? data.skip : '');
+      .set('skip', data.skip ? data.skip : '')
+      .set('searchType', data.searchType ? data.searchType : '')
+      .set('search', data.search ? data.search : '');
     return this.http.get(`${this.url}/all/assigned`, { params: params });
+  }
+
+  public getIssuesAssignedCount(data): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.appService.getUserInfoFromLocalStorage().authToken)
+      .set('searchType', data.searchType ? data.searchType : '')
+      .set('search', data.search ? data.search : '');
+    return this.http.get(`${this.url}/all/assigned/count`, { params: params });
   }
 
   public getIssuesReported(data): Observable<any> {
@@ -48,8 +58,18 @@ export class IssueService {
       .set('authToken', this.appService.getUserInfoFromLocalStorage().authToken)
       .set('limit', data.limit ? data.limit : '')
       .set('sort', data.sort ? data.sort : '')
-      .set('skip', data.skip ? data.skip : '');
+      .set('skip', data.skip ? data.skip : '')
+      .set('searchType', data.searchType ? data.searchType : '')
+      .set('search', data.search ? data.search : '');
     return this.http.get(`${this.url}/all/reported`, { params: params });
+  }
+
+  public getIssuesReportedCount(data): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.appService.getUserInfoFromLocalStorage().authToken)
+      .set('searchType', data.searchType ? data.searchType : '')
+      .set('search', data.search ? data.search : '');
+    return this.http.get(`${this.url}/all/reported/count`, { params: params });
   }
 
   public editIssue(data): Observable<any> {
@@ -111,6 +131,14 @@ export class IssueService {
       .set('issueId', data.issueId);
 
     return this.http.get(`${this.url}/comment/all`, { params: params });
+  }
+
+  public markNotificationsAsRead(data): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.appService.getUserInfoFromLocalStorage().authToken)
+      .set('issueId', data.issueId);
+
+    return this.http.put(`${this.url}/notifications/mark`, params);
   }
 
 }

@@ -11,16 +11,21 @@ import { AppService } from './app.service';
 import { ToastrModule } from "ngx-toastr";
 import { ListModule } from './list/list.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { NavbarComponent } from './navbar/navbar.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    NavbarComponent
   ],
   imports: [
     BrowserModule,
     UserModule,
     ListModule,
     DashboardModule,
+    FontAwesomeModule,
     RouterModule.forRoot([
       { path: 'login', component: LoginComponent, pathMatch: 'full' },
       { path: '', redirectTo: 'login', pathMatch: 'full' },

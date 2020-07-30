@@ -71,6 +71,28 @@ export class AppService {
     return this.http.get(`${this.url}/all`, { params: params });
   }
 
+  public getUnreadNotifications(): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken);
+
+    return this.http.get(`${this.url}/notifications/all/unread`, { params: params });
+  }
+
+  public getNotifications(data): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken)
+      .set('sort', data.sort ? data.sort : '');
+
+    return this.http.get(`${this.url}/notifications/all`, { params: params });
+  }
+
+  public markAllNotificationsAsRead(): Observable<any> {
+    const params = new HttpParams()
+      .set('authToken', this.getUserInfoFromLocalStorage().authToken)
+
+    return this.http.put(`${this.url}/notifications/all/unread/mark`, params);
+  }
+
   public getUserInfoFromLocalStorage() {
     return JSON.parse(localStorage.getItem('userInfo'));
   }

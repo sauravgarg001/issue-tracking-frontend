@@ -42,6 +42,7 @@ export class IssueComponent implements OnInit {
   public nonAssignees;
   public assignee: string;
   public comment: string;
+  public canUpdate: boolean = false;
 
   constructor(private _route: ActivatedRoute,
     public appService: AppService,
@@ -127,6 +128,8 @@ export class IssueComponent implements OnInit {
                     firstName: this.user.firstName,
                     lastName: this.user.lastName
                   });
+                } else {
+                  this.canUpdate = true;
                 }
                 //filter users which have been assigned task already
                 this.nonAssignees = this.nonAssignees.filter(function (user) {
@@ -140,6 +143,16 @@ export class IssueComponent implements OnInit {
                   }
                   return true;
                 });
+
+                //check user can edit or not
+                if (!this.canUpdate) {
+                  for (let assignee of apiResponse.data.assignees) {
+                    if (assignee.to.email == this.user.email) {
+                      this.canUpdate = true;
+                      break;
+                    }
+                  }
+                }
                 resolve();
               }
               else {
@@ -218,18 +231,41 @@ export class IssueComponent implements OnInit {
       });
     }
 
+    let markNotificationAsRead = () => {
+      return new Promise((resolve, reject) => {
+        if (this.add) {
+          resolve();
+        } else {
+          this.issueService.markNotificationsAsRead({ issueId: this.issue.issueId }).subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              resolve();
+            },
+            (err) => {
+              if (err.status == 500) {
+                reject(err.error.message);
+              }
+              else {
+                resolve();
+              }
+            });
+        }
+      });
+    }
+
     getUser()
       .then(getUsers)
       .then(getIssue)
       .then(getWatchersCount)
       .then(getComments)
       .then(getWatchers)
+      .then(markNotificationAsRead)
       .then(() => {
         console.info("Initialization Done");
       })
       .catch((errorMessage) => {
         this.toastr.error(errorMessage);
-        //this.router.navigate(['/dashboard']);
+        this.router.navigate(['/dashboard']);
       });
 
   }
@@ -335,9 +371,8 @@ export class IssueComponent implements OnInit {
         if (apiResponse.status === 200) {
           let data = apiResponse.data;
           this.toastr.success(apiResponse.message);
-
+          this.router.navigate([`/issue/${data.issueId}`]);
           setTimeout(() => {
-            this.router.navigate([`/issue/${data.issueId}`]);
             location.reload();
           }, 1000);
         }
@@ -399,9 +434,9 @@ export class IssueComponent implements OnInit {
       (apiResponse) => {
         console.log(apiResponse);
         if (apiResponse.status === 200) {
-          let comment = apiResponse.data;
-          this.issue.comments.push(comment);
+          this.issue.comments = apiResponse.data;
           this.toastr.success(apiResponse.message);
+          this.comment = '';
         }
         else {
           this.toastr.error(apiResponse.message);
