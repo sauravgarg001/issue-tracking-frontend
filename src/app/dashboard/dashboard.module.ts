@@ -5,6 +5,7 @@ import { IssueComponent } from './issue/issue.component';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 
 
 
@@ -18,7 +19,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
       { path: 'issue/:issueId', component: IssueComponent },
     ]),
     FormsModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    CKEditorModule
   ]
 })
 export class DashboardModule { }

@@ -70,7 +70,7 @@
                     <tr *ngFor="let issue of issues" (click)="openIssue(issue.issueId)">
                         <td>{{issue.title}}</td>
                         <td [ngClass]="{'text-primary': issue.status=='In-Progress', 'text-info': issue.status=='In-Test', 'text-success': issue.status=='Done', 'text-danger': issue.status=='Backlog'}">{{issue.status}}</td>
-                        <td style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: 200px;">{{issue.description}}</td>
+                        <td style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: 150px;" [innerHtml]="issue.description"></td>
                         <td [title]="issue.reporter.email">{{issue.reporter.firstName}} {{issue.reporter.lastName}}</td>
                         <td>{{issue.createdOn | date:'h:mm a, d MMM y'}}</td>
                         <td>{{issue.modifiedOn | date:'h:mm a, d MMM y'}}</td>
@@ -115,7 +115,7 @@
                     <tr *ngFor="let issue of issues" (click)="openIssue(issue.issueId)">
                         <td>{{issue.title}}</td>
                         <td [ngClass]="{'text-primary': issue.status=='In-Progress', 'text-info': issue.status=='In-Test', 'text-success': issue.status=='Done', 'text-danger': issue.status=='Backlog'}">{{issue.status}}</td>
-                        <td style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: 150px;">{{issue.description}}</td>
+                        <td style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;max-width: 150px;" [innerHtml]="issue.description"></td>
                         <td>
                             <span *ngFor="let assignee of issue.assignees; let i = index" [attr.data-index]="i" [title]="assignee.to.email">{{assignee.to.firstName}} {{assignee.to.lastName}}<span *ngIf="i!=issue.assignees.length-1">, </span></span>
                         </td>

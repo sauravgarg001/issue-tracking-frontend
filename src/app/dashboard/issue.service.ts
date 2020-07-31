@@ -79,10 +79,25 @@ export class IssueService {
       .set('title', data.title ? data.title : '')
       .set('description', data.description ? data.description : '')
       .set('status', data.status ? data.status : '')
-      .set('assignees', data.assignees ? encodeURI(JSON.stringify(data.assignees)) : '');
+      .set('assignees', data.assignees ? encodeURI(JSON.stringify(data.assignees)) : '')
+      .set('attachments', data.assignees ? encodeURI(JSON.stringify(data.attachments)) : '');
 
     return this.http.put(`${this.url}/`, params);
   }
+
+  public addAttachments(data): Observable<any> {
+
+    let attachments: Array<File> = data.attachments;
+    const formData: FormData = new FormData();
+    for (let i = 0; i < attachments.length; i++) {
+      formData.append("attachments", attachments[i], attachments[i]['name']);
+    }
+    formData.append('authToken', this.appService.getUserInfoFromLocalStorage().authToken);
+    formData.append('issueId', data.issueId);
+
+    return this.http.post(`${this.url}/attachments`, formData);
+  }
+
 
   public addWatcher(data): Observable<any> {
     const params = new HttpParams()

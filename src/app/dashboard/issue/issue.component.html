@@ -1,11 +1,11 @@
-<div class="container" *ngIf="(add || issue) && users">
+<div class="container  mt-3" *ngIf="(add || issue) && users">
     <form>
         <div class="form-row">
             <div class="form-group col-6">
                 <label for="title">Title</label>
                 <input type="text" class="form-control" id="title" name="title" [(ngModel)]="issue.title" placeholder="Enter title" required [readonly]='issue.reporter.email != user.email'>
             </div>
-            <div class="form-group col-2 ml-auto" *ngIf="!add && issue.watchersCount!=-1">
+            <div class="form-group float-right ml-auto" *ngIf="!add && issue.watchersCount!=-1">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text" *ngIf="!issue.watchers">{{issue.watchersCount}}</span>
                     <div class="dropdown" *ngIf="issue.watchers">
@@ -41,20 +41,6 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="description">Description</label>
-            <textarea class="form-control" [(ngModel)]="issue.description" id="description" name="description" rows="3" placeholder="Describe your issue here..." required [readonly]='issue.reporter.email != user.email'></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="attachments">Add attachments</label>
-            <div class="custom-file">
-                <input type="file" class="custom-file-input" id="attachments" multiple>
-                <label class="custom-file-label" for="attachments">Choose images...</label>
-                <div class="invalid-feedback">No file Chosen</div>
-            </div>
-        </div>
-
-        <div class="form-group">
             <label for="assignee">Assigned to</label>
             <div class="list-group">
                 <div class="input-group" *ngFor="let assignee of issue.assignees">
@@ -80,8 +66,37 @@
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary" *ngIf="!add && canUpdate" (click)="updateIssue()">Update</button>
-        <button type="button" class="btn btn-primary" *ngIf="add" (click)="createIssue()">Submit</button>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <ckeditor *ngIf="issue.reporter.email == user.email" [(ngModel)]="issue.description" name="description" id="description" [editor]="Editor" tagName="textarea"></ckeditor>
+            <div *ngIf="issue.reporter.email != user.email" [innerHtml]="issue.description" name="description" id="description" class=" border rounded px-3 py-1"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary mb-3" *ngIf="!add && canUpdate" (click)="updateIssue()">Update</button>
+        <button type="button" class="btn btn-primary mb-3" *ngIf="add" (click)="createIssue()">Submit</button>
+
+        <div class="form-group" *ngIf="!add">
+            <label for="attachments">Attachments</label>
+            <div class="form-row">
+                <div class="form-group col-12" *ngIf="issue.attachments">
+                    <img *ngFor="let image of issue.attachments" [src]="image" class="col-md-6 img-thumbnail" alt="No preview">
+                </div>
+                <div class="form-group col-12" *ngIf="attachments">
+                    <p class="text-warning small mb-0">Yet to upload:</p>
+                    <img *ngFor="let image of attachments" [src]="image.tempUrl" class="col-md-6 img-thumbnail" alt="No preview" title="{{image.name}}">
+                </div>
+                <div class="form-group col-md-10">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="attachments" multiple (change)="addAttachments($event)" accept="image/*">
+                        <label class="custom-file-label" for="attachments">Choose images...</label>
+                    </div>
+                </div>
+                <div class="form-group col-md-2" *ngIf="attachments">
+                    <button type="button" class="btn btn-primary btn-block" (click)="uploadAttachments()">Upload</button>
+                </div>
+            </div>
+        </div>
+
     </form>
     <form class="mt-3" *ngIf="!add">
         <h4>Comments</h4>
@@ -94,8 +109,8 @@
             </div>
         </div>
         <div class="form-group">
-            <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Leave a comment..." [(ngModel)]="comment" required></textarea>
+            <ckeditor [(ngModel)]="comment" name="comment" id="comment" [editor]="Editor" tagName="textarea"></ckeditor>
         </div>
-        <button type="button" class="btn btn-primary float-right" (click)="addComment()">Comment</button>
+        <button type="button" class="btn btn-primary float-right mb-3" (click)="addComment()">Comment</button>
     </form>
 </div>

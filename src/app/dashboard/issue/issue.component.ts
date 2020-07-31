@@ -5,8 +5,7 @@ import { AppService } from 'src/app/app.service';
 import { ToastrService } from 'ngx-toastr';
 import { SocketService } from 'src/app/socket.service';
 import { IssueService } from '../issue.service';
-
-
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 @Component({
   selector: 'app-issue',
   templateUrl: './issue.component.html',
@@ -18,6 +17,8 @@ export class IssueComponent implements OnInit {
   //Font Awesome Icons
   public faTimes = faTimes;
   public faPlus = faPlus;
+
+  public Editor = ClassicEditor;
   public add: boolean = false;
   public issue = {
     issueId: '',
@@ -32,6 +33,7 @@ export class IssueComponent implements OnInit {
     modifiedOn: '',
     createdOn: '',
     watchersCount: -1,
+    attachments: Array(),
     assignees: Array(),
     comments: Array(),
     watchers: Array()
@@ -41,8 +43,9 @@ export class IssueComponent implements OnInit {
   public users;
   public nonAssignees;
   public assignee: string;
-  public comment: string;
+  public comment: string = '';
   public canUpdate: boolean = false;
+  public attachments;
 
   constructor(private _route: ActivatedRoute,
     public appService: AppService,
@@ -50,7 +53,6 @@ export class IssueComponent implements OnInit {
     public router: Router,
     private toastr: ToastrService,
     public issueService: IssueService) { }
-
 
   ngOnInit(): void {
     this.disconnectedSocket();
@@ -385,6 +387,47 @@ export class IssueComponent implements OnInit {
       });
   }
 
+  public addAttachments(event) {
+    let files = event.target.files;
+    if (!files) {
+      return;
+    } else {
+      let renderCount = 0;
+      for (let i = 0; i < files.length; i++) {
+        let reader = new FileReader();
+        reader.readAsDataURL(files[i]);
+        reader.onload = (event) => {
+          files[i].tempUrl = event.target.result;
+          renderCount++;
+          if (renderCount == files.length) {
+            this.attachments = files;
+          }
+        }
+      }
+    }
+  }
+
+  public uploadAttachments() {
+    if (this.attachments) {
+      this.issueService.addAttachments({ attachments: this.attachments, issueId: this.issue.issueId }).subscribe(
+        (apiResponse) => {
+          console.log(apiResponse);
+          if (apiResponse.status === 200) {
+            this.issue.attachments = apiResponse.data;
+            this.oldIssue.attachments = JSON.parse(JSON.stringify(apiResponse.data));
+            this.attachments = null;
+            this.toastr.success(apiResponse.message);
+          }
+          else {
+            this.toastr.error(apiResponse.message);
+          }
+        },
+        (err) => {
+          this.toastr.error(err.error.message);
+        })
+    }
+  }
+
   public updateIssue(): void {
     let data = {};
     if (this.issue.title != this.oldIssue.title) {
@@ -396,8 +439,11 @@ export class IssueComponent implements OnInit {
     if (this.issue.status != this.oldIssue.status) {
       data['status'] = this.issue.status
     }
-    if (!this.areEqual(this.issue.assignees, this.oldIssue.assignees)) {
+    if (!this.assigneesAreEqual(this.issue.assignees, this.oldIssue.assignees)) {
       data['assignees'] = this.issue.assignees
+    }
+    if (!this.attachmentsAreEqual(this.issue.attachments, this.oldIssue.attachments)) {
+      data['attachments'] = this.issue.attachments
     }
     if (!data || Object.keys(data).length == 0) {
       this.toastr.error("Nothing to update");
@@ -490,7 +536,7 @@ export class IssueComponent implements OnInit {
   }
 
   //check whether two arrays have same elements or not
-  private areEqual(arr1: Array<any>, arr2: Array<any>): boolean {
+  private assigneesAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
     let n = arr1.length;
     let m = arr2.length;
 
@@ -520,6 +566,41 @@ export class IssueComponent implements OnInit {
       count = map[arr2[i].to.email];
       --count;
       map[arr2[i].to.email] = count;
+    }
+
+    return true;
+  }
+
+  private attachmentsAreEqual(arr1: Array<any>, arr2: Array<any>): boolean {
+    let n = arr1.length;
+    let m = arr2.length;
+
+    if (n != m)
+      return false;
+
+    let map = Object();
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+      if (map[arr1[i]] == null)
+        map[arr1[i]] = 1;
+      else {
+        count = map[arr1[i]];
+        count++;
+        map[arr1[i]] = count;
+      }
+    }
+
+
+    for (let i = 0; i < n; i++) {
+      if (!(arr2[i] in map))
+        return false;
+
+      if (map[arr2[i]] == 0)
+        return false;
+
+      count = map[arr2[i]];
+      --count;
+      map[arr2[i]] = count;
     }
 
     return true;
