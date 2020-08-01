@@ -94,7 +94,11 @@ export class AppService {
   }
 
   public getUserInfoFromLocalStorage() {
-    return JSON.parse(localStorage.getItem('userInfo'));
+    if (localStorage.getItem('userInfo')) {
+      return JSON.parse(localStorage.getItem('userInfo'));
+    } else {
+      return null;
+    }
   }
 
   public setUserInfoInLocalStorage(data) {

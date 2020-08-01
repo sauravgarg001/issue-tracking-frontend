@@ -12,6 +12,7 @@ export class SocketService {
 
   private baseUrl = 'http://localhost:3000';
   private socket;
+  private first = true;
 
   constructor(public http: HttpClient, public appService: AppService) {
     //handshake
@@ -29,13 +30,15 @@ export class SocketService {
   }
 
   public setUser() {
-    let data = {
-      authToken: this.appService.getUserInfoFromLocalStorage().authToken
+    if (this.appService.getUserInfoFromLocalStorage()) {
+      let data = {
+        authToken: this.appService.getUserInfoFromLocalStorage().authToken
+      }
+      this.socket.emit('set-user', data);
     }
-    this.socket.emit('set-user', data);
   }
 
-  public setUpdates(data) {
+  public notifyUpdates(data) {
     data.userId = this.appService.getUserInfoFromLocalStorage().userId;
     let eventName = data.eventName;
     delete data.eventName;
@@ -50,6 +53,23 @@ export class SocketService {
     });
   }
 
+  public authErrorMultiple() {
+    if (this.appService.getUserInfoFromLocalStorage() && this.first) {
+      this.first = false;
+
+      return Observable.create((observer) => {
+        this.socket.on('auth-error@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
+          console.log(this.appService.getUserInfoFromLocalStorage().authToken);
+
+          if (data.authToken != this.appService.getUserInfoFromLocalStorage().authToken)
+            observer.next(data);
+        });
+      });
+    } else {
+      return null;
+    }
+  }
+
   public disconnectedSocket() {
     return Observable.create(
       (observer) => {
@@ -60,16 +80,74 @@ export class SocketService {
       });
   }
 
-  public getUpdates() {
+  public updateIssue() {
     return Observable.create((observer) => {
-      this.socket.on('updates@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
+      this.socket.on('issue@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
         observer.next(data);
       });
     });
   }
 
+  public updateIssues() {
+    return Observable.create((observer) => {
+      this.socket.on('issues@' + this.appService.getUserInfoFromLocalStorage().userId, () => {
+        observer.next();
+      });
+    });
+  }
+
+  public updateIssuesAssigned() {
+    return Observable.create((observer) => {
+      this.socket.on('issues-assigned@' + this.appService.getUserInfoFromLocalStorage().userId, () => {
+        observer.next();
+      });
+    });
+  }
+
+  public updateIssuesReported() {
+    return Observable.create((observer) => {
+      this.socket.on('issues-reported@' + this.appService.getUserInfoFromLocalStorage().userId, () => {
+        observer.next();
+      });
+    });
+  }
+
+  public updateComments() {
+    return Observable.create((observer) => {
+      this.socket.on('comments@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  public updateWatchers() {
+    return Observable.create((observer) => {
+      this.socket.on('watchers@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  public updateWatchersCount() {
+    return Observable.create((observer) => {
+      this.socket.on('watchers-count@' + this.appService.getUserInfoFromLocalStorage().userId, (data) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  public updateNotifications() {
+    return Observable.create((observer) => {
+      this.socket.on('notifications@' + this.appService.getUserInfoFromLocalStorage().userId, () => {
+        observer.next();
+      });
+    });
+  }
+
+
   public exitSocket() {
     this.socket.disconnect();
+    this.first = true;
   }
 
   private handleError(err: HttpErrorResponse) {

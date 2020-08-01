@@ -132,7 +132,7 @@
         <nav aria-label="..." *ngIf="totalIssues">
             <ul class="pagination justify-content-end">
                 <li class="page-item" [class.disabled]="page==1">
-                    <a class="page-link" (click)="gotoPage(page+1)">Previous</a>
+                    <a class="page-link" (click)="gotoPage(page-1)">Previous</a>
                 </li>
                 <li class="page-item" *ngFor="let i of counter(totalPages);" [class.active]="page==i">
                     <a class="page-link" (click)="gotoPage(i)">{{i}}</a>

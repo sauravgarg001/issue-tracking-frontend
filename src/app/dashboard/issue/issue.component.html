@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="input-group" *ngIf="canUpdate || add">
-                <input type="text" class="custom-select" id="assignee" name="assignee" list="assignees" placeholder="Select user to assign issue" [(ngModel)]="assignee" required>
+                <input type="text" class="custom-select" id="assignee" name="assignee" list="assignees" placeholder="Select user to assign issue" [(ngModel)]="assignee" (keyup.enter)="addAssignee()" required>
                 <datalist id="assignees">
                     <option *ngFor="let nonAssignee of nonAssignees" [value]="nonAssignee.email">{{nonAssignee.firstName}} {{nonAssignee.lastName}} &lt;{{nonAssignee.email}}&gt;</option>
                 </datalist>
@@ -78,11 +78,11 @@
         <div class="form-group" *ngIf="!add">
             <label for="attachments">Attachments</label>
             <div class="form-row">
-                <div class="form-group col-12" *ngIf="issue.attachments">
+                <div class="col-12 mb-3" *ngIf="issue.attachments">
                     <img *ngFor="let image of issue.attachments" [src]="image" class="col-md-6 img-thumbnail" alt="No preview">
                 </div>
                 <div class="form-group col-12" *ngIf="attachments">
-                    <p class="text-warning small mb-0">Yet to upload:</p>
+                    <p class="text-danger small mb-1">Yet to upload:</p>
                     <img *ngFor="let image of attachments" [src]="image.tempUrl" class="col-md-6 img-thumbnail" alt="No preview" title="{{image.name}}">
                 </div>
                 <div class="form-group col-md-10">

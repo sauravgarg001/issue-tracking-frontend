@@ -41,83 +41,80 @@ export class DashboardComponent implements OnInit {
     let userInfo = this.appService.getUserInfoFromLocalStorage();
     if (!userInfo || !userInfo.authToken || !userInfo.userId)
       this.router.navigate(['/login']);
+    else {
+      let getUser = () => {
+        return new Promise((resolve, reject) => {
+          this.appService.getUser().subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              if (apiResponse.status === 200) {
+                this.user = apiResponse.data;
+                resolve();
+              }
+              else {
+                reject(apiResponse.message);
+              }
+            },
+            (err) => {
+              reject(err.error.message);
+            });
+        });
+      }
 
-    this.disconnectedSocket();
-    this.authError();
-    this.verifyUserConfirmation();
+      let getIssues = () => {
+        return new Promise((resolve, reject) => {
 
-    let getUser = () => {
-      return new Promise((resolve, reject) => {
-        this.appService.getUser().subscribe(
-          (apiResponse) => {
-            console.log(apiResponse);
-            if (apiResponse.status === 200) {
-              this.user = apiResponse.data;
-              resolve();
+          this.issueService.getIssuesAssigned({}).subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              if (apiResponse.status === 200) {
+                this.issues = apiResponse.data;
+                resolve();
+              }
+              else {
+                reject(apiResponse.message);
+              }
+            },
+            (err) => {
+              reject(err.error.message);
             }
-            else {
-              reject(apiResponse.message);
+          );
+        });
+      }
+
+      let getIssuesCount = () => {
+        return new Promise((resolve, reject) => {
+
+          this.issueService.getIssuesAssignedCount({}).subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              if (apiResponse.status === 200) {
+                this.totalIssues = apiResponse.data;
+                this.totalPages = Math.ceil(this.totalIssues / 10);
+                resolve();
+              }
+              else {
+                reject(apiResponse.message);
+              }
+            },
+            (err) => {
+              reject(err.error.message);
             }
-          },
-          (err) => {
-            reject(err.error.message);
-          });
-      });
+          );
+        });
+      }
+
+      getUser()
+        .then(getIssues)
+        .then(getIssuesCount)
+        .then(() => {
+          this.getUpdatedIssues();
+          console.info("Initialization Done");
+        })
+        .catch((errorMessage) => {
+          this.toastr.error(errorMessage)
+        });
     }
-
-    let getIssues = () => {
-      return new Promise((resolve, reject) => {
-
-        this.issueService.getIssuesAssigned({}).subscribe(
-          (apiResponse) => {
-            console.log(apiResponse);
-            if (apiResponse.status === 200) {
-              this.issues = apiResponse.data;
-              resolve();
-            }
-            else {
-              reject(apiResponse.message);
-            }
-          },
-          (err) => {
-            reject(err.error.message);
-          }
-        );
-      });
-    }
-
-    let getIssuesCount = () => {
-      return new Promise((resolve, reject) => {
-
-        this.issueService.getIssuesAssignedCount({}).subscribe(
-          (apiResponse) => {
-            console.log(apiResponse);
-            if (apiResponse.status === 200) {
-              this.totalIssues = apiResponse.data;
-              this.totalPages = Math.ceil(this.totalIssues / 10);
-              resolve();
-            }
-            else {
-              reject(apiResponse.message);
-            }
-          },
-          (err) => {
-            reject(err.error.message);
-          }
-        );
-      });
-    }
-
-    getUser()
-      .then(getIssues)
-      .then(getIssuesCount)
-      .then(() => {
-        console.info("Initialization Done");
-      })
-      .catch((errorMessage) => {
-        this.toastr.error(errorMessage)
-      });
-
   }
 
   private getIssuesCount(): void {
@@ -154,48 +151,6 @@ export class DashboardComponent implements OnInit {
         }
       );
     }
-  }
-
-  public verifyUserConfirmation(): any {
-    this.socketService.verifyUser().subscribe(
-      () => {
-        this.socketService.setUser();
-      });
-  }
-
-  public authError(): any {
-    this.socketService.authError().subscribe(
-      (data) => {
-        setTimeout(() => {
-          this.logout(data.error);
-        }, 200)
-      });
-  }
-
-  public disconnectedSocket(): any {
-    this.socketService.disconnectedSocket().subscribe(
-      () => {
-        // location.reload();
-      });
-  }
-
-  public logout(err) {
-    this.socketService.exitSocket();
-    this.appService.logout().subscribe(
-      (apiResponse) => {
-        console.log(apiResponse);
-        if (apiResponse.status === 200) {
-          this.toastr.success(err || apiResponse.message);
-        }
-        else {
-          this.toastr.error(err || apiResponse.message);
-        }
-      },
-      (err) => {
-        this.toastr.error(err || err.error.message);
-      });
-    this.appService.removeUserInfoInLocalStorage();
-    this.router.navigate(['/login']);
   }
 
   public toggleIssueType(issueType): void {
@@ -375,6 +330,23 @@ export class DashboardComponent implements OnInit {
         }
       );
     }
+  }
+
+  public getUpdatedIssues(): void {
+    this.socketService.updateIssuesAssigned().subscribe(
+      () => {
+        if (this.issuesType == 'Assigned') {
+          this.gotoPage(this.page);
+          this.getIssuesCount();
+        }
+      });
+    this.socketService.updateIssuesReported().subscribe(
+      () => {
+        if (this.issuesType == 'Reported') {
+          this.gotoPage(this.page);
+          this.getIssuesCount();
+        }
+      });
   }
 
 }

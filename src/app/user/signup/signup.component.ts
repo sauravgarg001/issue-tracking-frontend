@@ -25,17 +25,18 @@ export class SignupComponent implements OnInit {
     let userInfo = this.appService.getUserInfoFromLocalStorage();
     if (userInfo && userInfo.authToken && userInfo.userId)
       this.router.navigate(['/dashboard']);
-
-    this.appService.getCountryCode().subscribe(
-      (apiResponse) => {
-        if (apiResponse) {
-          this.phones = apiResponse;
-          this.codes = Object.keys(this.phones);
-        }
-      },
-      (err) => {
-        console.error(err.error.message);
-      });
+    else {
+      this.appService.getCountryCode().subscribe(
+        (apiResponse) => {
+          if (apiResponse) {
+            this.phones = apiResponse;
+            this.codes = Object.keys(this.phones);
+          }
+        },
+        (err) => {
+          console.error(err.error.message);
+        });
+    }
   }
 
   public signup(): void {

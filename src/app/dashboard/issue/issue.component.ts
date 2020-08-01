@@ -55,73 +55,250 @@ export class IssueComponent implements OnInit {
     public issueService: IssueService) { }
 
   ngOnInit(): void {
-    this.disconnectedSocket();
-    this.authError();
-    this.verifyUserConfirmation();
-    if (this._route.snapshot.paramMap.get('issueId').toLowerCase() == 'add') {
-      this.add = true;
-    } else {
-      this.issue.issueId = this._route.snapshot.paramMap.get('issueId');
-    }
+    let userInfo = this.appService.getUserInfoFromLocalStorage();
+    if (!userInfo || !userInfo.authToken || !userInfo.userId)
+      this.router.navigate(['/login']);
+    else {
 
-    let getUser = () => {
-      return new Promise((resolve, reject) => {
-        this.appService.getUser().subscribe(
-          (apiResponse) => {
-            console.log(apiResponse);
-            if (apiResponse.status === 200) {
-              this.user = apiResponse.data;
-              //check whether new issue is being created or not
-              if (this.add)
-                this.issue.reporter = {
-                  email: this.user.email,
-                  firstName: this.user.firstName,
-                  lastName: this.user.lastName
-                };
-              resolve();
-            }
-            else {
-              reject(apiResponse.message);
-            }
-          },
-          (err) => {
-            reject(err.error.message);
-          });
-      });
-    }
-    let getUsers = () => {
-      return new Promise((resolve, reject) => {
-        this.appService.getUsers().subscribe(
-          (apiResponse) => {
-            console.log(apiResponse);
-            this.users = apiResponse.data;
-            //to keep track of nonAssigned users
-            this.nonAssignees = JSON.parse(JSON.stringify(apiResponse.data));
-            resolve();
-          },
-          (err) => {
-            if (err.status == 404) {
-              reject("No user to assign an issue");
-            }
-            else {
+      if (this._route.snapshot.paramMap.get('issueId').toLowerCase() == 'add') {
+        this.add = true;
+      } else {
+        this.issue.issueId = this._route.snapshot.paramMap.get('issueId');
+      }
+
+      let getUser = () => {
+        return new Promise((resolve, reject) => {
+          this.appService.getUser().subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              if (apiResponse.status === 200) {
+                this.user = apiResponse.data;
+                //check whether new issue is being created or not
+                if (this.add)
+                  this.issue.reporter = {
+                    email: this.user.email,
+                    firstName: this.user.firstName,
+                    lastName: this.user.lastName
+                  };
+                resolve();
+              }
+              else {
+                reject(apiResponse.message);
+              }
+            },
+            (err) => {
               reject(err.error.message);
-            }
-          });
-      });
-    }
+            });
+        });
+      }
+      let getUsers = () => {
+        return new Promise((resolve, reject) => {
+          this.appService.getUsers().subscribe(
+            (apiResponse) => {
+              console.log(apiResponse);
+              this.users = apiResponse.data;
+              //to keep track of nonAssigned users
+              this.nonAssignees = JSON.parse(JSON.stringify(apiResponse.data));
+              resolve();
+            },
+            (err) => {
+              if (err.status == 404) {
+                reject("No user to assign an issue");
+              }
+              else {
+                reject(err.error.message);
+              }
+            });
+        });
+      }
 
-    let getIssue = () => {
-      return new Promise((resolve, reject) => {
-        if (this.add) {
-          resolve();
-        } else {
+      let getIssue = () => {
+        return new Promise((resolve, reject) => {
+          if (this.add) {
+            resolve();
+          } else {
+            this.issueService.getIssue({ issueId: this.issue.issueId }).subscribe(
+              (apiResponse) => {
+                console.log(apiResponse);
+                if (apiResponse.status === 200) {
+                  this.issue = apiResponse.data;
+                  //to check what changes made
+                  this.oldIssue = JSON.parse(JSON.stringify(apiResponse.data));
+                  //check whether user is reporter or not
+                  //if not add it to nonAssignee array
+                  if (this.issue.reporter.email != this.user.email) {
+                    this.nonAssignees.push({
+                      email: this.user.email,
+                      firstName: this.user.firstName,
+                      lastName: this.user.lastName
+                    });
+                  } else {
+                    this.canUpdate = true;
+                  }
+                  //filter users which have been assigned task already
+                  this.nonAssignees = this.nonAssignees.filter(function (user) {
+                    if (apiResponse.data.reporter.email == user.email) {
+                      return false;
+                    }
+                    for (let assignee of apiResponse.data.assignees) {
+                      if (assignee.to.email == user.email) {
+                        return false;
+                      }
+                    }
+                    return true;
+                  });
+
+                  //check user can edit or not
+                  if (!this.canUpdate) {
+                    for (let assignee of apiResponse.data.assignees) {
+                      if (assignee.to.email == this.user.email) {
+                        this.canUpdate = true;
+                        break;
+                      }
+                    }
+                  }
+                  resolve();
+                }
+                else {
+                  reject(apiResponse.message);
+                }
+              },
+              (err) => {
+                reject(err.error.message);
+              }
+            );
+          }
+        });
+      }
+
+      let getWatchersCount = () => {
+        return new Promise((resolve, reject) => {
+          if (this.add) {
+            resolve();
+          } else {
+            this.issueService.getWatchersCount({ issueId: this.issue.issueId }).subscribe(
+              (apiResponse) => {
+                console.log(apiResponse);
+                this.issue.watchersCount = apiResponse.data.count;
+                resolve();
+              },
+              (err) => {
+                reject(err.error.message);
+              });
+          }
+        });
+      }
+
+      let getComments = () => {
+        return new Promise((resolve, reject) => {
+          if (this.add) {
+            resolve();
+          } else {
+            this.issueService.getComments({ issueId: this.issue.issueId }).subscribe(
+              (apiResponse) => {
+                console.log(apiResponse);
+                this.issue.comments = apiResponse.data;
+                resolve();
+              },
+              (err) => {
+                if (err.status == 404) {
+                  resolve();
+                }
+                else {
+                  reject(err.error.message);
+                }
+              });
+          }
+        });
+      }
+
+      let getWatchers = () => {
+        return new Promise((resolve, reject) => {
+          if (this.add) {
+            resolve();
+          } else {
+            this.issueService.getWatchers({ issueId: this.issue.issueId }).subscribe(
+              (apiResponse) => {
+                console.log(apiResponse);
+                this.issue.watchers = apiResponse.data;
+                resolve();
+              },
+              (err) => {
+                if (err.status == 404) {
+                  resolve();
+                }
+                else {
+                  reject(err.error.message);
+                }
+              });
+          }
+        });
+      }
+
+      let markNotificationAsRead = () => {
+        return new Promise((resolve, reject) => {
+          if (this.add) {
+            resolve();
+          } else {
+            this.issueService.markNotificationsAsRead({ issueId: this.issue.issueId }).subscribe(
+              (apiResponse) => {
+                console.log(apiResponse);
+                resolve();
+              },
+              (err) => {
+                if (err.status == 500) {
+                  reject(err.error.message);
+                }
+                else {
+                  resolve();
+                }
+              });
+          }
+        });
+      }
+
+      getUser()
+        .then(getUsers)
+        .then(getIssue)
+        .then(getWatchersCount)
+        .then(getComments)
+        .then(getWatchers)
+        .then(markNotificationAsRead)
+        .then(() => {
+          console.info("Initialization Done");
+          this.getUpdatedIssue();
+          this.getUpdatedComments();
+          this.getUpdatedWatchcers();
+          this.getUpdatedWatchcersCount();
+        })
+        .catch((errorMessage) => {
+          this.toastr.error(errorMessage);
+          this.router.navigate(['/dashboard']);
+        });
+    }
+  }
+
+  public getUpdatedIssue(): void {
+    this.socketService.updateIssue().subscribe(
+      (data) => {
+        if (!this.add && data.issueId == this.issue.issueId) {
           this.issueService.getIssue({ issueId: this.issue.issueId }).subscribe(
             (apiResponse) => {
               console.log(apiResponse);
               if (apiResponse.status === 200) {
+                let oldIssueTemp = this.oldIssue;
+                let issueTemp = this.issue;
+
                 this.issue = apiResponse.data;
+                this.issue.watchersCount = issueTemp.watchersCount;
+                this.issue.comments = issueTemp.comments;
+                this.issue.watchers = issueTemp.watchers;
+
                 //to check what changes made
                 this.oldIssue = JSON.parse(JSON.stringify(apiResponse.data));
+                this.oldIssue.watchersCount = oldIssueTemp.watchersCount;
+                this.oldIssue.comments = oldIssueTemp.comments;
+                this.oldIssue.watchers = oldIssueTemp.watchers;
                 //check whether user is reporter or not
                 //if not add it to nonAssignee array
                 if (this.issue.reporter.email != this.user.email) {
@@ -130,8 +307,6 @@ export class IssueComponent implements OnInit {
                     firstName: this.user.firstName,
                     lastName: this.user.lastName
                   });
-                } else {
-                  this.canUpdate = true;
                 }
                 //filter users which have been assigned task already
                 this.nonAssignees = this.nonAssignees.filter(function (user) {
@@ -146,171 +321,85 @@ export class IssueComponent implements OnInit {
                   return true;
                 });
 
-                //check user can edit or not
-                if (!this.canUpdate) {
-                  for (let assignee of apiResponse.data.assignees) {
-                    if (assignee.to.email == this.user.email) {
-                      this.canUpdate = true;
-                      break;
-                    }
-                  }
-                }
-                resolve();
+                this.toastr.info('Issue got updated');
               }
               else {
-                reject(apiResponse.message);
+                this.toastr.error(apiResponse.message);
               }
             },
             (err) => {
-              reject(err.error.message);
+              this.toastr.error(err.error.message);
             }
           );
         }
       });
-    }
+  }
 
-    let getWatchersCount = () => {
-      return new Promise((resolve, reject) => {
-        if (this.add) {
-          resolve();
-        } else {
-          this.issueService.getWatchersCount({ issueId: this.issue.issueId }).subscribe(
-            (apiResponse) => {
-              console.log(apiResponse);
-              this.issue.watchersCount = apiResponse.data.count;
-              resolve();
-            },
-            (err) => {
-              reject(err.error.message);
-            });
-        }
-      });
-    }
-
-    let getComments = () => {
-      return new Promise((resolve, reject) => {
-        if (this.add) {
-          resolve();
-        } else {
+  public getUpdatedComments(): void {
+    this.socketService.updateComments().subscribe(
+      (data) => {
+        if (!this.add && data.issueId == this.issue.issueId) {
           this.issueService.getComments({ issueId: this.issue.issueId }).subscribe(
             (apiResponse) => {
               console.log(apiResponse);
-              this.issue.comments = apiResponse.data;
-              resolve();
-            },
-            (err) => {
-              if (err.status == 404) {
-                resolve();
+              if (apiResponse.status === 200) {
+                this.issue.comments = apiResponse.data;
+                this.toastr.info('New comment added');
               }
               else {
-                reject(err.error.message);
+                this.toastr.error(apiResponse.message);
               }
-            });
+            },
+            (err) => {
+              this.toastr.error(err.error.message);
+            }
+          );
         }
       });
-    }
+  }
 
-    let getWatchers = () => {
-      return new Promise((resolve, reject) => {
-        if (this.add) {
-          resolve();
-        } else {
+  public getUpdatedWatchcers(): void {
+    this.socketService.updateWatchers().subscribe(
+      (data) => {
+        if (!this.add && data.issueId == this.issue.issueId && this.issue.watchers) {
           this.issueService.getWatchers({ issueId: this.issue.issueId }).subscribe(
             (apiResponse) => {
               console.log(apiResponse);
-              this.issue.watchers = apiResponse.data;
-              resolve();
-            },
-            (err) => {
-              if (err.status == 404) {
-                resolve();
+              if (apiResponse.status === 200) {
+                this.issue.watchers = apiResponse.data;
               }
               else {
-                reject(err.error.message);
+                this.toastr.error(apiResponse.message);
               }
-            });
+            },
+            (err) => {
+              this.toastr.error(err.error.message);
+            }
+          );
         }
       });
-    }
+  }
 
-    let markNotificationAsRead = () => {
-      return new Promise((resolve, reject) => {
-        if (this.add) {
-          resolve();
-        } else {
-          this.issueService.markNotificationsAsRead({ issueId: this.issue.issueId }).subscribe(
+  public getUpdatedWatchcersCount(): void {
+    this.socketService.updateWatchersCount().subscribe(
+      (data) => {
+        if (!this.add && data.issueId == this.issue.issueId && this.issue.watchers) {
+          this.issueService.getWatchersCount({ issueId: this.issue.issueId }).subscribe(
             (apiResponse) => {
               console.log(apiResponse);
-              resolve();
-            },
-            (err) => {
-              if (err.status == 500) {
-                reject(err.error.message);
+              if (apiResponse.status === 200) {
+                this.issue.watchersCount = apiResponse.data.count;
               }
               else {
-                resolve();
+                this.toastr.error(apiResponse.message);
               }
-            });
+            },
+            (err) => {
+              this.toastr.error(err.error.message);
+            }
+          );
         }
       });
-    }
-
-    getUser()
-      .then(getUsers)
-      .then(getIssue)
-      .then(getWatchersCount)
-      .then(getComments)
-      .then(getWatchers)
-      .then(markNotificationAsRead)
-      .then(() => {
-        console.info("Initialization Done");
-      })
-      .catch((errorMessage) => {
-        this.toastr.error(errorMessage);
-        this.router.navigate(['/dashboard']);
-      });
-
-  }
-  public verifyUserConfirmation(): any {
-    this.socketService.verifyUser().subscribe(
-      () => {
-        this.socketService.setUser();
-      });
-  }
-
-  public authError(): any {
-    this.socketService.authError().subscribe(
-      (data) => {
-        setTimeout(() => {
-          this.logout(data.error);
-        }, 200)
-      });
-  }
-
-  public disconnectedSocket(): any {
-    this.socketService.disconnectedSocket().subscribe(
-      () => {
-        //location.reload();
-      });
-  }
-
-  public logout(err) {
-    this.socketService.exitSocket();
-    this.appService.logout().subscribe(
-      (apiResponse) => {
-        console.log(apiResponse);
-        if (apiResponse.status === 200) {
-          this.toastr.success(err || apiResponse.message);
-        }
-        else {
-          this.toastr.error(err || apiResponse.message);
-        }
-      },
-      (err) => {
-        this.toastr.error(err || err.error.message);
-      });
-    this.appService.removeUserInfoInLocalStorage();
-    this.router.navigate(['/login']);
   }
 
   public addAssignee(): void {
@@ -371,9 +460,13 @@ export class IssueComponent implements OnInit {
       (apiResponse) => {
         console.log(apiResponse);
         if (apiResponse.status === 200) {
-          let data = apiResponse.data;
+          this.issue.issueId = apiResponse.data;
           this.toastr.success(apiResponse.message);
-          this.router.navigate([`/issue/${data.issueId}`]);
+          this.socketService.notifyUpdates({
+            eventName: 'issue',
+            issue: this.issue
+          });
+          this.router.navigate([`/issue/${this.issue.issueId}`]);
           setTimeout(() => {
             location.reload();
           }, 1000);
@@ -416,6 +509,10 @@ export class IssueComponent implements OnInit {
             this.issue.attachments = apiResponse.data;
             this.oldIssue.attachments = JSON.parse(JSON.stringify(apiResponse.data));
             this.attachments = null;
+            this.socketService.notifyUpdates({
+              eventName: 'issue',
+              issue: this.issue
+            });
             this.toastr.success(apiResponse.message);
           }
           else {
@@ -456,6 +553,10 @@ export class IssueComponent implements OnInit {
           if (apiResponse.status === 200) {
             this.issue = apiResponse.data;
             this.oldIssue = JSON.parse(JSON.stringify(apiResponse.data));
+            this.socketService.notifyUpdates({
+              eventName: 'issue',
+              issue: this.issue
+            });
             this.toastr.success(apiResponse.message);
           }
           else {
@@ -481,6 +582,10 @@ export class IssueComponent implements OnInit {
         console.log(apiResponse);
         if (apiResponse.status === 200) {
           this.issue.comments = apiResponse.data;
+          this.socketService.notifyUpdates({
+            eventName: 'comment',
+            issueId: this.issue.issueId
+          });
           this.toastr.success(apiResponse.message);
           this.comment = '';
         }
@@ -503,6 +608,10 @@ export class IssueComponent implements OnInit {
         if (apiResponse.status === 200) {
           this.issue.watchers = apiResponse.data;
           this.issue.watchersCount++;
+          this.socketService.notifyUpdates({
+            eventName: 'watcher',
+            issueId: this.issue.issueId
+          });
           this.toastr.success(apiResponse.message);
         }
         else {
@@ -524,6 +633,10 @@ export class IssueComponent implements OnInit {
         if (apiResponse.status === 200) {
           this.issue.watchers = null;
           this.issue.watchersCount--;
+          this.socketService.notifyUpdates({
+            eventName: 'watcher',
+            issueId: this.issue.issueId
+          });
           this.toastr.success(apiResponse.message);
         }
         else {
